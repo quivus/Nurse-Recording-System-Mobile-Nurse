@@ -7,6 +7,27 @@ import '../mock/mock_patient_record_db.dart';
 class PatientRecords extends StatefulWidget {
   const PatientRecords({super.key});
 
+  static final List<Map<String, String>> samplePatients = [
+    {
+      "id": "R001",
+      "name": "Rajime",
+      "diagnosis": "Flu",
+      "treatment": "Rest and hydration",
+    },
+    {
+      "id": "R002",
+      "name": "Chavz",
+      "diagnosis": "Asthma",
+      "treatment": "Inhaler and medication",
+    },
+    {
+      "id": "R003",
+      "name": "Raii",
+      "diagnosis": "Migraine",
+      "treatment": "Pain relievers and rest",
+    },
+  ];
+
   @override
   State<PatientRecords> createState() => _PatientRecordsState();
 }
@@ -419,89 +440,122 @@ class _PatientRecordsState extends State<PatientRecords> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text("Patient Record Form",
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22)),
-        flexibleSpace:
-            Container(decoration: const BoxDecoration(gradient: AppColors.primaryGradient)),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildRecordIDField(),
-              const SizedBox(height: 16),
-              _animatedTextField(_dateController, "Date", Icons.calendar_today_rounded,
-                  readOnly: true, onTap: _pickDate),
-              const SizedBox(height: 16),
-              _animatedTextField(_diagnosisController, "Diagnosis",
-                  Icons.medical_information_rounded),
-              const SizedBox(height: 16),
-              _buildSection(
-              title: "Symptoms",
-              icon: Icons.medical_services_rounded,
-              subtitle: "Select all that apply",
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+          child: Form(
+            key: _formKey,
+            child: Column(
               children: [
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _symptoms.map((symptom) {
-                    final isSelected = _selectedSymptoms.contains(symptom["name"]);
-                    return _buildSymptomChip(
-                        symptom["name"], symptom["icon"], isSelected);
-                  }).toList(),
-                ),
-                if (_selectedSymptoms.contains("Other:")) ...[
-                  const SizedBox(height: 6),
-                  _animatedTextField(
-                    _otherSymptomController,
-                    "Please specify...",
-                    Icons.edit_note_rounded,
-                    requiredField: false,
-                    maxLines: 1,
-                  ),
-                ],
-              ],
-            ),
-              const SizedBox(height: 16),
-              _animatedTextField(_treatmentController, "Treatment", Icons.healing_rounded),
-              const SizedBox(height: 16),
-              _animatedTextField(_notesController, "Notes", Icons.note_rounded,
-                  maxLines: 3, requiredField: false),
-              const SizedBox(height: 35),
-              InkWell(
-                onTap: _submitForm,
-                borderRadius: BorderRadius.circular(18),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryGradient.colors.first.withOpacity(0.5),
-                        offset: const Offset(0, 8),
-                        blurRadius: 20,
+                _buildRecordIDField(),
+                const SizedBox(height: 16),
+                _animatedTextField(_dateController, "Date",
+                    Icons.calendar_today_rounded,
+                    readOnly: true, onTap: _pickDate),
+                const SizedBox(height: 16),
+                _animatedTextField(_diagnosisController, "Diagnosis",
+                    Icons.medical_information_rounded),
+                const SizedBox(height: 16),
+                _buildSection(
+                  title: "Symptoms",
+                  icon: Icons.medical_services_rounded,
+                  subtitle: "Select all that apply",
+                  children: [
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _symptoms.map((symptom) {
+                        final isSelected =
+                            _selectedSymptoms.contains(symptom["name"]);
+                        return _buildSymptomChip(
+                            symptom["name"], symptom["icon"], isSelected);
+                      }).toList(),
+                    ),
+                    if (_selectedSymptoms.contains("Other:")) ...[
+                      const SizedBox(height: 6),
+                      _animatedTextField(
+                        _otherSymptomController,
+                        "Please specify...",
+                        Icons.edit_note_rounded,
+                        requiredField: false,
+                        maxLines: 1,
                       ),
                     ],
-                  ),
-                  child: const Center(
-                    child: Text("Save Record",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18)),
-                  ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _animatedTextField(
+                    _treatmentController, "Treatment", Icons.healing_rounded),
+                const SizedBox(height: 16),
+                _animatedTextField(_notesController, "Notes", Icons.note_rounded,
+                    maxLines: 3, requiredField: false),
+                const SizedBox(height: 35),
+                _SubmitButton(
+                  onTap: _submitForm,
+                  label: "Save Record",
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SubmitButton extends StatefulWidget {
+  final VoidCallback onTap;
+  final String label;
+
+  const _SubmitButton({required this.onTap, required this.label});
+
+  @override
+  State<_SubmitButton> createState() => _SubmitButtonState();
+}
+
+class _SubmitButtonState extends State<_SubmitButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          decoration: BoxDecoration(
+            color: _isPressed ? Colors.transparent : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: ShaderMask(
+              shaderCallback: (bounds) => _isPressed
+                  ? const LinearGradient(
+                      colors: [Colors.white, Colors.white],
+                    ).createShader(bounds)
+                  : AppColors.primaryGradient.createShader(bounds),
+              child: Text(
+                widget.label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

@@ -88,9 +88,9 @@ class _AddFormState extends State<AddForm> {
                       color: Colors.white, size: 50),
                 ),
                 const SizedBox(height: 20),
-                Text(
+                const Text(
                   "Form Submitted!",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: Color.fromARGB(221, 24, 129, 20),
@@ -119,90 +119,72 @@ class _AddFormState extends State<AddForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          "Add Patient Form",
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        ),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildSection(
-                title: "Patient Record",
-                icon: Icons.badge_rounded,
-                children: [
-                  _animatedTextField(
-                    _patientIdController,
-                    label: "Record ID",
-                    readOnly: true,
-                    requiredField: false,
-                    boldText: true,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 25),
-              _buildSection(
-                title: "Patient Information",
-                icon: Icons.person_rounded,
-                children: [
-                  _animatedTextField(
-                      _firstNameController,
-                      label: "First Name",
-                      icon: Icons.person_outline_rounded),
-                  const SizedBox(height: 16),
-                  _animatedTextField(
-                      _middleNameController,
-                      label: "Middle Name",
-                      icon: Icons.person_outline_rounded,
-                      requiredField: false),
-                  const SizedBox(height: 16),
-                  _animatedTextField(
-                      _lastNameController,
-                      label: "Last Name",
-                      icon: Icons.person_outline_rounded),
-                  const SizedBox(height: 16),
-                  _animatedTextField(
-                      _addressController,
-                      label: "Address",
-                      icon: Icons.home_rounded),
-                ],
-              ),
-              const SizedBox(height: 25),
-              _buildSection(
-                title: "Contact Information",
-                icon: Icons.phone_rounded,
-                children: [
-                  _animatedTextField(
-                      _facebookController,
-                      label: "Facebook",
-                      icon: Icons.facebook_rounded,
-                      requiredField: false),
-                  const SizedBox(height: 16),
-                  _animatedTextField(
-                      _emailController,
-                      label: "Email",
-                      icon: Icons.email_rounded),
-                  const SizedBox(height: 16),
-                  _animatedTextField(
-                      _emergencyContactController,
-                      label: "Emergency Contact",
-                      icon: Icons.call_rounded,
-                      keyboard: TextInputType.number),
-                ],
-              ),
-              const SizedBox(height: 35),
-              _buildSubmitButton(),
-            ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                _buildSection(
+                  title: "Patient Record",
+                  icon: Icons.badge_rounded,
+                  children: [
+                    _animatedTextField(
+                      _patientIdController,
+                      label: "Record ID",
+                      readOnly: true,
+                      requiredField: false,
+                      boldText: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 25),
+                _buildSection(
+                  title: "Patient Information",
+                  icon: Icons.person_rounded,
+                  children: [
+                    _animatedTextField(_firstNameController,
+                        label: "First Name", icon: Icons.person_outline_rounded),
+                    const SizedBox(height: 16),
+                    _animatedTextField(_middleNameController,
+                        label: "Middle Name",
+                        icon: Icons.person_outline_rounded,
+                        requiredField: false),
+                    const SizedBox(height: 16),
+                    _animatedTextField(_lastNameController,
+                        label: "Last Name", icon: Icons.person_outline_rounded),
+                    const SizedBox(height: 16),
+                    _animatedTextField(_addressController,
+                        label: "Address", icon: Icons.home_rounded),
+                  ],
+                ),
+                const SizedBox(height: 25),
+                _buildSection(
+                  title: "Contact Information",
+                  icon: Icons.phone_rounded,
+                  children: [
+                    _animatedTextField(_facebookController,
+                        label: "Facebook",
+                        icon: Icons.facebook_rounded,
+                        requiredField: false),
+                    const SizedBox(height: 16),
+                    _animatedTextField(_emailController,
+                        label: "Email", icon: Icons.email_rounded),
+                    const SizedBox(height: 16),
+                    _animatedTextField(_emergencyContactController,
+                        label: "Emergency Contact",
+                        icon: Icons.call_rounded,
+                        keyboard: TextInputType.number),
+                  ],
+                ),
+                const SizedBox(height: 35),
+                _SubmitButton(
+                  onTap: _submitForm,
+                  label: "Submit",
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -216,7 +198,7 @@ class _AddFormState extends State<AddForm> {
     TextInputType keyboard = TextInputType.text,
     bool readOnly = false,
     bool requiredField = true,
-    bool boldText = false, 
+    bool boldText = false,
     int maxLines = 1,
   }) {
     final focusNode = FocusNode();
@@ -233,7 +215,8 @@ class _AddFormState extends State<AddForm> {
             boxShadow: focusNode.hasFocus
                 ? [
                     BoxShadow(
-                      color: AppColors.primaryGradient.colors.first.withOpacity(0.25),
+                      color: AppColors.primaryGradient.colors.first
+                          .withOpacity(0.25),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     )
@@ -294,7 +277,9 @@ class _AddFormState extends State<AddForm> {
   }
 
   Widget _buildSection(
-      {required String title, required IconData icon, List<Widget>? children}) {
+      {required String title,
+      required IconData icon,
+      List<Widget>? children}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -335,30 +320,60 @@ class _AddFormState extends State<AddForm> {
       ),
     );
   }
+}
 
-  Widget _buildSubmitButton() {
-    return InkWell(
-      onTap: _submitForm,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
+class _SubmitButton extends StatefulWidget {
+  final VoidCallback onTap;
+  final String label;
+
+  const _SubmitButton({required this.onTap, required this.label});
+
+  @override
+  State<_SubmitButton> createState() => _SubmitButtonState();
+}
+
+class _SubmitButtonState extends State<_SubmitButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           gradient: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryGradient.colors.first.withOpacity(0.5),
-              offset: const Offset(0, 8),
-              blurRadius: 20,
-            ),
-          ],
         ),
-        child: const Center(
-          child: Text(
-            "Submit",
-            style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          decoration: BoxDecoration(
+            color: _isPressed ? Colors.transparent : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: ShaderMask(
+              shaderCallback: (bounds) => _isPressed
+                  ? const LinearGradient(
+                      colors: [Colors.white, Colors.white],
+                    ).createShader(bounds)
+                  : AppColors.primaryGradient.createShader(bounds),
+              child: Text(
+                widget.label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ),
+              ),
+            ),
           ),
         ),
       ),

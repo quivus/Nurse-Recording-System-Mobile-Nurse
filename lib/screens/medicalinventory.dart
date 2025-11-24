@@ -14,7 +14,7 @@ class _MedicalInventoryState extends State<MedicalInventory> {
     {'name': 'Amoxicillin', 'category': 'Antibiotic', 'quantity': '85', 'expiry': '05/2027'},
     {'name': 'Cetirizine', 'category': 'Antihistamine', 'quantity': '150', 'expiry': '09/2026'},
     {'name': 'Ibuprofen', 'category': 'Anti-inflammatory', 'quantity': '22', 'expiry': '03/2027'},
-    {'name': 'Insulin', 'category': 'Hormone', 'quantity': '8', 'expiry': '11/2025'},
+    {'name': 'Insulin', 'category': 'Hormone', 'quantity': '8', 'expiry': '11/2024'},
   ];
 
   Color _getQuantityColor(String quantityStr) {
@@ -24,10 +24,15 @@ class _MedicalInventoryState extends State<MedicalInventory> {
     return Colors.green.shade700;
   }
 
-  bool _isExpiringSoon(String expiry) {
+  bool _isExpired(String expiry) {
     if (expiry.length < 7) return false;
-    final year = int.tryParse(expiry.substring(3));
-    return year != null && year <= 2025;
+    final parts = expiry.split('/');
+    if (parts.length != 2) return false;
+    final month = int.tryParse(parts[0]);
+    final year = int.tryParse(parts[1]);
+    if (month == null || year == null) return false;
+    final expiryDate = DateTime(year, month + 1, 0);
+    return expiryDate.isBefore(DateTime.now());
   }
 
   void _showMedicineDialog({Map<String, String>? medicine, int? index}) {
@@ -45,7 +50,6 @@ class _MedicalInventoryState extends State<MedicalInventory> {
           insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Container(
             decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(20),
             ),
             padding: const EdgeInsets.all(3),
@@ -57,75 +61,69 @@ class _MedicalInventoryState extends State<MedicalInventory> {
               ),
               child: Form(
                 key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      medicine == null ? "Add Medicine" : "Edit Medicine",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryGradient.colors.first,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        medicine == null ? "Add Medicine" : "Edit Medicine",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildGradientInput(nameController, "Medicine Name"),
-                    const SizedBox(height: 16),
-                    _buildGradientInput(categoryController, "Category"),
-                    const SizedBox(height: 16),
-                    _buildGradientInput(quantityController, "Quantity", keyboardType: TextInputType.number),
-                    const SizedBox(height: 16),
-                    _buildGradientInput(expiryController, "Expiry (MM/YYYY)"),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final newMedicine = {
-                                'name': nameController.text,
-                                'category': categoryController.text,
-                                'quantity': quantityController.text,
-                                'expiry': expiryController.text,
-                              };
-                              setState(() {
-                                if (index != null) {
-                                  medicines[index] = newMedicine;
-                                } else {
-                                  medicines.add(newMedicine);
+                      const SizedBox(height: 20),
+                      _buildInput(nameController, "Medicine Name"),
+                      const SizedBox(height: 16),
+                      _buildInput(categoryController, "Category"),
+                      const SizedBox(height: 16),
+                      _buildInput(quantityController, "Quantity", keyboardType: TextInputType.number),
+                      const SizedBox(height: 16),
+                      _buildInput(expiryController, "Expiry (MM/YYYY)"),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  final newMedicine = {
+                                    'name': nameController.text,
+                                    'category': categoryController.text,
+                                    'quantity': quantityController.text,
+                                    'expiry': expiryController.text,
+                                  };
+                                  setState(() {
+                                    if (index != null) {
+                                      medicines[index] = newMedicine;
+                                    } else {
+                                      medicines.add(newMedicine);
+                                    }
+                                  });
+                                  Navigator.pop(context);
                                 }
-                              });
-                              Navigator.pop(context);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryGradient.colors.first,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: const Text(
-                              "Save",
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryGradient.colors.first,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Text(
+                                "Save",
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: MouseRegion(
-                            cursor: SystemMouseCursors.click,
+                          const SizedBox(width: 12),
+                          Expanded(
                             child: ElevatedButton(
                               onPressed: () => Navigator.pop(context),
-                              style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.resolveWith((states) {
-                                  if (states.contains(MaterialState.hovered)) {
-                                    return Colors.red.shade700;
-                                  }
-                                  return Colors.grey.shade300;
-                                }),
-                                foregroundColor: MaterialStateProperty.all(Colors.white),
-                                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 16)),
-                                shape: MaterialStateProperty.all(
-                                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:  Colors.red.shade500,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                               child: const Text(
                                 "Cancel",
@@ -133,10 +131,10 @@ class _MedicalInventoryState extends State<MedicalInventory> {
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    )
-                  ],
+                        ],
+                      )
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -146,33 +144,37 @@ class _MedicalInventoryState extends State<MedicalInventory> {
     );
   }
 
-  Widget _buildGradientInput(TextEditingController controller, String placeholder,
-      {TextInputType keyboardType = TextInputType.text}) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      padding: const EdgeInsets.all(2),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.black87),
-        decoration: InputDecoration(
-          hintText: placeholder,
-          hintStyle: TextStyle(color: AppColors.primaryGradient.colors.first.withOpacity(0.6)),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  Widget _buildInput(TextEditingController controller, String placeholder,
+    {TextInputType keyboardType = TextInputType.text}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.grey.shade300,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    padding: const EdgeInsets.all(2),
+    child: TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: const TextStyle(color: Colors.black87),
+      validator: (value) => value == null || value.isEmpty ? "Required" : null,
+      decoration: InputDecoration(
+        hintText: placeholder,
+        hintStyle: const TextStyle(color: Colors.black54),
+        filled: true,
+        fillColor: Colors.grey.shade200,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMedicineCard(Map<String, String> med, int index) {
     final quantityColor = _getQuantityColor(med['quantity']!);
-    final isExpiring = _isExpiringSoon(med['expiry']!);
+    final isExpired = _isExpired(med['expiry']!);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -181,12 +183,15 @@ class _MedicalInventoryState extends State<MedicalInventory> {
         borderRadius: BorderRadius.circular(18),
       ),
       child: Container(
+        margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
           onTap: () => _showMedicineDialog(medicine: med, index: index),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -195,45 +200,105 @@ class _MedicalInventoryState extends State<MedicalInventory> {
               children: [
                 Text(
                   med['name']!,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primaryGradient.colors.first,
+                    color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text("Category: ${med['category']}", style: const TextStyle(color: Colors.black54, fontSize: 15)),
-                const SizedBox(height: 4),
-                Text(
-                  "Quantity: ${med['quantity']}",
-                  style: TextStyle(color: quantityColor, fontWeight: FontWeight.bold, fontSize: 16),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Text(
+                      "Category: ",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                      ),
+                    ),
+                    Text(
+                      med['category']!,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  "Expiry: ${med['expiry']}${isExpiring ? ' (Expiring!)' : ''}",
-                  style: TextStyle(color: isExpiring ? Colors.red.shade700 : Colors.black87, fontWeight: FontWeight.bold, fontSize: 16),
+                Row(
+                  children: [
+                    const Text(
+                      "Quantity: ",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      med['quantity']!,
+                      style: TextStyle(
+                        color: quantityColor,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Text(
+                      "Expiry: ",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      "${med['expiry']}${isExpired ? ' (Expired)' : ''}",
+                      style: TextStyle(
+                        color: isExpired ? Colors.red.shade700 : Colors.black87,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () => _showMedicineDialog(medicine: med, index: index),
+                      style: TextButton.styleFrom(
+                        overlayColor: Colors.transparent,
+                      ),
+                      onPressed: () =>
+                          _showMedicineDialog(medicine: med, index: index),
                       child: Text(
                         "Edit",
-                        style: TextStyle(color: AppColors.primaryGradient.colors.first, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     TextButton(
+                      style: TextButton.styleFrom(
+                        overlayColor: Colors.transparent,
+                      ),
                       onPressed: () => _deleteMedicine(index),
                       child: const Text(
                         "Delete",
-                        style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
@@ -251,14 +316,7 @@ class _MedicalInventoryState extends State<MedicalInventory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text("Medical Inventory", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
-        flexibleSpace: Container(decoration: const BoxDecoration(gradient: AppColors.primaryGradient)),
-        elevation: 4,
-        foregroundColor: Colors.white,
-      ),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: medicines.isEmpty

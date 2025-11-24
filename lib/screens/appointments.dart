@@ -139,89 +139,79 @@ class _AppointmentsState extends State<Appointments> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          "Clinic Appointment",
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 22),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-        ),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildSection(
-                title: "Patient Information",
-                icon: Icons.person_rounded,
-                children: [
-                  _animatedTextField(firstNameController, "First Name",
-                      Icons.person_outline_rounded),
-                  const SizedBox(height: 16),
-                  _animatedTextField(middleNameController, "Middle Name",
-                      Icons.person_outline_rounded,
-                      required: false),
-                  const SizedBox(height: 16),
-                  _animatedTextField(lastNameController, "Last Name",
-                      Icons.person_outline_rounded),
-                  const SizedBox(height: 16),
-                  _animatedTextField(ageController, "Age", Icons.cake_rounded,
-                      keyboard: TextInputType.number),
-                  const SizedBox(height: 16),
-                  _animatedTextField(contactController, "Mobile Number",
-                      Icons.phone_rounded,
-                      keyboard: TextInputType.phone),
-                ],
-              ),
-              const SizedBox(height: 25),
-              _buildSection(
-                title: "Appointment Schedule",
-                icon: Icons.calendar_month_rounded,
-                children: [
-                  _animatedTextField(dateController, "Select Date",
-                      Icons.event_note_rounded,
-                      readOnly: true, onTap: () => _selectDate(context)),
-                  const SizedBox(height: 16),
-                  _animatedTextField(timeController, "Select Time",
-                      Icons.access_time_filled,
-                      readOnly: true, onTap: () => _selectTime(context)),
-                ],
-              ),
-              const SizedBox(height: 25),
-              _buildSection(
-                title: "Symptoms",
-                icon: Icons.medical_services_rounded,
-                subtitle: "Select all that apply",
-                children: [
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: _symptoms.map((symptom) {
-                      final isSelected =
-                          _selectedSymptoms.contains(symptom["name"]);
-                      return _buildSymptomChip(
-                          symptom["name"], symptom["icon"], isSelected);
-                    }).toList(),
-                  ),
-                  if (_selectedSymptoms.contains("Other:")) ...[
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                _buildSection(
+                  title: "Patient Information",
+                  icon: Icons.person_rounded,
+                  children: [
+                    _animatedTextField(firstNameController, "First Name",
+                        Icons.person_outline_rounded),
                     const SizedBox(height: 16),
-                    _animatedTextField(otherSymptomController,
-                        "Please specify...", Icons.edit_note_rounded,
-                        required: false, maxLines: 3),
+                    _animatedTextField(middleNameController, "Middle Name",
+                        Icons.person_outline_rounded,
+                        required: false),
+                    const SizedBox(height: 16),
+                    _animatedTextField(lastNameController, "Last Name",
+                        Icons.person_outline_rounded),
+                    const SizedBox(height: 16),
+                    _animatedTextField(ageController, "Age", Icons.cake_rounded,
+                        keyboard: TextInputType.number),
+                    const SizedBox(height: 16),
+                    _animatedTextField(contactController, "Mobile Number",
+                        Icons.phone_rounded,
+                        keyboard: TextInputType.phone),
                   ],
-                ],
-              ),
-              const SizedBox(height: 35),
-              _buildSubmitButton(),
-              const SizedBox(height: 30),
-            ],
+                ),
+                const SizedBox(height: 25),
+                _buildSection(
+                  title: "Appointment Schedule",
+                  icon: Icons.calendar_month_rounded,
+                  children: [
+                    _animatedTextField(dateController, "Select Date",
+                        Icons.event_note_rounded,
+                        readOnly: true, onTap: () => _selectDate(context)),
+                    const SizedBox(height: 16),
+                    _animatedTextField(timeController, "Select Time",
+                        Icons.access_time_filled,
+                        readOnly: true, onTap: () => _selectTime(context)),
+                  ],
+                ),
+                const SizedBox(height: 25),
+                _buildSection(
+                  title: "Symptoms",
+                  icon: Icons.medical_services_rounded,
+                  subtitle: "Select all that apply",
+                  children: [
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: _symptoms.map((symptom) {
+                        final isSelected =
+                            _selectedSymptoms.contains(symptom["name"]);
+                        return _buildSymptomChip(
+                            symptom["name"], symptom["icon"], isSelected);
+                      }).toList(),
+                    ),
+                    if (_selectedSymptoms.contains("Other:")) ...[
+                      const SizedBox(height: 16),
+                      _animatedTextField(otherSymptomController,
+                          "Please specify...", Icons.edit_note_rounded,
+                          required: false, maxLines: 3),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 35),
+                _buildSubmitButton(),
+                const SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),
@@ -413,30 +403,60 @@ class _AppointmentsState extends State<Appointments> {
   }
 
   Widget _buildSubmitButton() {
-    return InkWell(
-      onTap: _submitAppointment,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
+    return _SubmitButton(onTap: _submitAppointment);
+  }
+}
+
+class _SubmitButton extends StatefulWidget {
+  final VoidCallback onTap;
+
+  const _SubmitButton({required this.onTap});
+
+  @override
+  State<_SubmitButton> createState() => _SubmitButtonState();
+}
+
+class _SubmitButtonState extends State<_SubmitButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           gradient: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryGradient.colors.first.withOpacity(0.5),
-              offset: const Offset(0, 8),
-              blurRadius: 20,
-            ),
-          ],
         ),
-        child: const Center(
-          child: Text(
-            "Submit Appointment",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          decoration: BoxDecoration(
+            color: _isPressed ? Colors.transparent : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: ShaderMask(
+              shaderCallback: (bounds) => _isPressed
+                  ? const LinearGradient(
+                      colors: [Colors.white, Colors.white],
+                    ).createShader(bounds)
+                  : AppColors.primaryGradient.createShader(bounds),
+              child: const Text(
+                "Submit Appointment",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ),
+              ),
             ),
           ),
         ),
