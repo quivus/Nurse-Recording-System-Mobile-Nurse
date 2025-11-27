@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../widgets/app_colors.dart';
+import '../models/appointment.dart'; 
+import '../services/appointment_user.dart';
 
 class Appointments extends StatefulWidget {
   const Appointments({super.key});
@@ -52,7 +54,7 @@ class _AppointmentsState extends State<Appointments> {
     );
     if (picked != null) {
       setState(() {
-        dateController.text = DateFormat('MMMM dd, yyyy').format(picked);
+        dateController.text = DateFormat('yyyy-MM-dd').format(picked);
       });
     }
   }
@@ -77,32 +79,55 @@ class _AppointmentsState extends State<Appointments> {
       final dt =
           DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
       setState(() {
-        timeController.text = DateFormat('h:mm a').format(dt);
+        timeController.text = DateFormat('HH:mm').format(dt);
       });
     }
   }
 
-  void _submitAppointment() {
-    if (_formKey.currentState!.validate()) {
-      if (_selectedSymptoms.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Please select at least one symptom."),
-            backgroundColor: Colors.orange.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-        return;
-      }
+  Future<void> _submitAppointment() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedSymptoms.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Please select at least one symptom."),
+          backgroundColor: Colors.orange.shade700,
+        ),
+      );
+      return;
+    }
+    if (dateController.text.isEmpty || timeController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Please select appointment date and time."),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
 
+    // Combine date & time
+    final appointmentDateTime =
+        DateTime.parse("${dateController.text} ${timeController.text}:00");
+
+final appointment = Appointment(
+  appointmentTime: appointmentDateTime.toIso8601String(),
+  appointmentDescription: _selectedSymptoms.join(", ") +
+      (otherSymptomController.text.isNotEmpty
+          ? ", ${otherSymptomController.text}"
+          : ""),
+  nurseId: 1, // replace with your actual nurse ID
+  createdBy: "${firstNameController.text} ${lastNameController.text}",
+);
+
+
+    try {
+      await AppointmentService.createAppointment(appointment);
+      // Show success dialog
       showDialog(
         context: context,
         builder: (context) => Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -116,21 +141,24 @@ class _AppointmentsState extends State<Appointments> {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.done_all_rounded,
-                      color: Color.fromARGB(255, 255, 255, 255), size: 50),
+                      color: Colors.white, size: 50),
                 ),
                 const SizedBox(height: 20),
                 const Text(
                   "Appointment Submitted!",
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color.fromARGB(255, 44, 202, 49),
-                  ),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color.fromARGB(255, 44, 202, 49)),
                 ),
               ],
             ),
           ),
         ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to submit: $e")),
       );
     }
   }
@@ -229,63 +257,60 @@ class _AppointmentsState extends State<Appointments> {
     VoidCallback? onTap,
   }) {
     final focusNode = FocusNode();
-
-    return StatefulBuilder(
-      builder: (context, setState) {
-        focusNode.addListener(() => setState(() {}));
-
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+    return StatefulBuilder(builder: (context, setState) {
+      focusNode.addListener(() => setState(() {}));
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        decoration: BoxDecoration(
+          gradient: focusNode.hasFocus
+              ? AppColors.primaryGradient
+              : const LinearGradient(colors: [Colors.white, Colors.white]),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: focusNode.hasFocus
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryGradient.colors.first
+                        .withOpacity(0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
+        ),
+        padding: const EdgeInsets.all(1.2),
+        child: Container(
           decoration: BoxDecoration(
-            gradient: focusNode.hasFocus
-                ? AppColors.primaryGradient
-                : const LinearGradient(colors: [Colors.white, Colors.white]),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: focusNode.hasFocus
-                ? [
-                    BoxShadow(
-                      color: AppColors.primaryGradient.colors.first
-                          .withOpacity(0.25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    )
-                  ]
-                : [],
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
           ),
-          padding: const EdgeInsets.all(1.2),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: TextFormField(
-              focusNode: focusNode,
-              controller: controller,
-              keyboardType: keyboard,
-              readOnly: readOnly,
-              onTap: onTap,
-              maxLines: maxLines,
-              validator: (value) => required && (value == null || value.isEmpty)
-                  ? "This field is required"
-                  : null,
-              decoration: InputDecoration(
-                labelText: label,
-                prefixIcon: ShaderMask(
-                  shaderCallback: (bounds) =>
-                      AppColors.primaryGradient.createShader(bounds),
-                  child: Icon(icon, color: Colors.white),
-                ),
-                labelStyle: TextStyle(
-                    color: Colors.grey.shade600, fontWeight: FontWeight.w500),
-                border: InputBorder.none,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+          child: TextFormField(
+            focusNode: focusNode,
+            controller: controller,
+            keyboardType: keyboard,
+            readOnly: readOnly,
+            onTap: onTap,
+            maxLines: maxLines,
+            validator: (value) =>
+                required && (value == null || value.isEmpty)
+                    ? "This field is required"
+                    : null,
+            decoration: InputDecoration(
+              labelText: label,
+              prefixIcon: ShaderMask(
+                shaderCallback: (bounds) =>
+                    AppColors.primaryGradient.createShader(bounds),
+                child: Icon(icon, color: Colors.white),
               ),
+              labelStyle: TextStyle(
+                  color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+              border: InputBorder.none,
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
             ),
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
   }
 
   Widget _buildSymptomChip(String symptom, IconData icon, bool isSelected) {
@@ -445,9 +470,8 @@ class _SubmitButtonState extends State<_SubmitButton> {
           child: Center(
             child: ShaderMask(
               shaderCallback: (bounds) => _isPressed
-                  ? const LinearGradient(
-                      colors: [Colors.white, Colors.white],
-                    ).createShader(bounds)
+                  ? const LinearGradient(colors: [Colors.white, Colors.white])
+                      .createShader(bounds)
                   : AppColors.primaryGradient.createShader(bounds),
               child: const Text(
                 "Submit Appointment",

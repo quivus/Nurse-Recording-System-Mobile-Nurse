@@ -2,11 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/app_colors.dart';
 import '../widgets/app_background.dart';
-import 'patients_record.dart';
+
 
 class Home extends StatelessWidget {
-  const Home({super.key});
+  final int nurseId;
 
+  const Home({super.key, required this.nurseId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Welcome Nurse $nurseId")),
+      body: Center(
+        child: Text(
+          "Hello Nurse! Your ID is $nurseId",
+          style: const TextStyle(fontSize: 22),
+        ),
+      ),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,8 +45,8 @@ class Home extends StatelessWidget {
       ),
     );
   }
-}
 
+// ------------------ Header ------------------
 class _Header extends StatelessWidget {
   const _Header();
 
@@ -74,6 +89,7 @@ class _Header extends StatelessWidget {
   }
 }
 
+// ------------------ Profile Menu ------------------
 class _ProfileMenu extends StatefulWidget {
   const _ProfileMenu();
 
@@ -140,11 +156,7 @@ class _ProfileMenuState extends State<_ProfileMenu> {
   }
 
   static PopupMenuItem<String> _menuItem(
-    String value,
-    IconData icon,
-    String text,
-    Color color,
-  ) {
+      String value, IconData icon, String text, Color color) {
     return PopupMenuItem(
       value: value,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -183,6 +195,7 @@ class _ProfileMenuState extends State<_ProfileMenu> {
   }
 }
 
+// ------------------ Search Bar ------------------
 class _SearchBar extends StatefulWidget {
   const _SearchBar();
 
@@ -213,16 +226,22 @@ class _SearchBarState extends State<_SearchBar> {
     super.dispose();
   }
 
-  void _onSearch(String query) {
-    setState(() {
-      if (query.isEmpty) {
+  Future<List<Map<String, String>>> _fetchPatients(String query) async {
+    // TODO: Replace with API call
+    return [];
+  }
+
+  void _onSearch(String query) async {
+    if (query.isEmpty) {
+      setState(() {
         _filteredPatients = [];
-      } else {
-        _filteredPatients = PatientRecords.samplePatients
-            .where((patient) =>
-                patient['name']!.toLowerCase().contains(query.toLowerCase()))
-            .toList();
-      }
+      });
+      return;
+    }
+
+    final results = await _fetchPatients(query);
+    setState(() {
+      _filteredPatients = results;
     });
   }
 
@@ -231,22 +250,6 @@ class _SearchBarState extends State<_SearchBar> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            ShaderMask(
-              shaderCallback: (bounds) =>
-                  AppColors.primaryGradient.createShader(bounds),
-              child: const Text(
-                'Hello, Nurse Ayumi ',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
         const SizedBox(height: 24),
         const Text(
           'Searching for a patient?',
@@ -267,15 +270,6 @@ class _SearchBarState extends State<_SearchBar> {
                   : Colors.grey.shade300,
               width: 2,
             ),
-            boxShadow: [
-              if (_isFocused)
-                BoxShadow(
-                  color:
-                      AppColors.primaryGradient.colors.first.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-            ],
           ),
           child: TextField(
             controller: _searchController,
@@ -297,62 +291,18 @@ class _SearchBarState extends State<_SearchBar> {
                 ),
               ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 14,
-                horizontal: 10,
-              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
             ),
-            style: const TextStyle(
-              color: Colors.black87,
-              fontSize: 15,
-            ),
+            style: const TextStyle(color: Colors.black87, fontSize: 15),
           ),
         ),
-        if (_filteredPatients.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: _filteredPatients.map((patient) {
-                return ListTile(
-                  title: Text(
-                    patient['name']!,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text('Diagnosis: ${patient['diagnosis']}'),
-                  onTap: () {
-                    _searchController.clear();
-                    _focusNode.unfocus();
-                    setState(() {
-                      _filteredPatients = [];
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Selected: ${patient['name']}'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-        ],
       ],
     );
   }
 }
 
+// ------------------ Quick Actions ------------------
 class _QuickActionsRow extends StatelessWidget {
   const _QuickActionsRow();
 
@@ -418,19 +368,22 @@ class _SquareActionCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          if (title == 'Appointments') {
-            Navigator.pushNamed(context, '/appointments');
-          } else if (title == 'Patient Records') {
-            Navigator.pushNamed(context, '/patientsrecords');
-          } else if (title == 'Medical Inventory') {
-            Navigator.pushNamed(context, '/medicalinventory');
-          } else if (title == 'Add Form') {
-            Navigator.pushNamed(context, '/addform');
+          switch (title) {
+            case 'Appointments':
+              Navigator.pushNamed(context, '/appointments');
+              break;
+            case 'Patient Records':
+              Navigator.pushNamed(context, '/patientsrecords');
+              break;
+            case 'Medical Inventory':
+              Navigator.pushNamed(context, '/medicalinventory');
+              break;
+            case 'Add Form':
+              Navigator.pushNamed(context, '/addform');
+              break;
           }
         },
         borderRadius: BorderRadius.circular(16),
-        splashColor: Colors.white.withOpacity(0.2),
-        highlightColor: Colors.white.withOpacity(0.1),
         child: Ink(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -439,7 +392,6 @@ class _SquareActionCard extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -451,7 +403,6 @@ class _SquareActionCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   title,
-                  textAlign: TextAlign.left,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 15,
@@ -461,7 +412,6 @@ class _SquareActionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  textAlign: TextAlign.left,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.85),
                     fontSize: 12,
@@ -472,37 +422,6 @@ class _SquareActionCard extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _GradientContainer extends StatelessWidget {
-  final Widget child;
-  final List<Color> colors;
-  final EdgeInsets padding;
-
-  const _GradientContainer({
-    required this.child,
-    required this.colors,
-    this.padding = const EdgeInsets.all(16),
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-      ),
-      child: Padding(
-        padding: padding,
-        child: child,
       ),
     );
   }

@@ -1,0 +1,22 @@
+[33m67d28b1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdevelop[m[33m)[m refactor: maintain cohesion and remove unused notifications/alerts
+[33m7eb154b[m add mock databases for NurseForm and PatientRecord
+[33m3d11a17[m update routes with all app screen
+[33md6f9471[m setup MedicalInventory page with CRUD functionality
+[33m25fbda2[m add patient record form with auto-generated ID, date picker, symptom selection, and save functionality
+[33me79aff4[m implement Add Patient Form with fields and auto-generated ID
+[33m88950b4[m implement Nurse Profile page with form fields
+[33mdf7f1ee[m change initial route to welcome
+[33m15bb719[m update dependencies: added intl and changed to direct main
+[33mec797d8[m added appointment form with fields, symptom selection, and built-in date/time picker using showDatePicker and showTimePicke
+[33mcae6181[m remove close button in notification
+[33m2a8d893[m add home screen with  quick actions, search bar, and notification dialog
+[33m33f9ab5[m add reusable widget components
+[33m30b3195[m implement sign-in screen using custom widgets
+[33me285515[m add animated welcome screen with the main logo
+[33mb764165[m integrate device preview and app routes in main.dart
+[33m42efb93[m add ACLC.svg to assets folder
+[33m1aafa7b[m add flutter_svg dependency and update args package
+[33m1ae7687[m update pubspec.yaml and pubspec.lock after adding dependencies
+[33m1d1ae52[m add generated Flutter platform files
+[33m4022b72[m Inital Setup
+[33m3a59106[m Create initial
